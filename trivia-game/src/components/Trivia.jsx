@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Trivia.css';
+import Button from '@mui/material/Button';
 
 const Trivia = () => {
     const [questions, setQuestions] = useState([]);
-    const [correctAnswer, setCorrectAnswer] = useState("");
-    const [answerChoices, setAnswerChoices] = useState([]);
     const [currentCorrect, setCurrentCorrect] = useState(0);
+    const [color, setColor] = useState("");
+    
 
-    // Function to mix and randomize answers
+    
     const renderChoices = (correct, incorrect) => {
         const answers = [...incorrect, correct];
-        return answers.sort(() => Math.random() - 0.5); // Shuffle the array
+        // randomly sorts array so that the last answer is not always the correct answer
+        return answers.sort(() => Math.random() - 0.5); 
     };
 
     useEffect(() => {
@@ -19,43 +21,51 @@ const Trivia = () => {
             const data = await response.json();
             if (data && data.length > 0) {
                 setQuestions(data);
-                const correct = data[0].correctAnswer;
-                setCorrectAnswer(correct);
-                const mixedAnswers = renderChoices(correct, data[0].incorrectAnswers);
-                setAnswerChoices(mixedAnswers);
+                console.log(data);
             }
         };
         fetchData();
     }, []);
 
-    
-    const handleClick = (answer) => {
+    const handleClick = (answer, correctAnswer, color) => {
         if (answer === correctAnswer) {
-            setCurrentCorrect((prevCorrect) => prevCorrect + 1);
+            setCurrentCorrect(currentCorrect + 1);
+            color = "correct";
         }
-        
+        else {
+            color = "incorrect";
+        }
+        setColor(color);
     };
+
+    // const setClassName = (answer, correctAnswer) => {
+    //     return answer === correctAnswer ? "correct" : "incorrect";
+    // };
 
     return (
         <div className="trivia">
             <h1>Trivia Game</h1>
-            {questions && questions.map((question, index) => (
-                <> 
-                    <p key={index}>{question.question.text}</p>
-                    {answerChoices.map((answer, index) => (
-                        <div> 
-                            <button key={index} onClick={() => handleClick(answer)}>
+            <p>Number of Correct Answers: {currentCorrect}</p>
+            {questions && questions.map((question, qIndex) => {
+                const mixedAnswers = renderChoices(question.correctAnswer, question.incorrectAnswers);
+                return (
+                    <div key={qIndex}>
+                        <p>{question.question.text}</p>
+                        {mixedAnswers.map((answer, aIndex) => (
+                            <Button
+                                key={aIndex}
+                                className={color}
+                                onClick={() => handleClick(answer, question.correctAnswer, color)}
+                            >
                                 {answer}
-                            </button>
-                        </div>
-                    ))}
-                </>
-                
-            ))}
-            <p> Number of Correct Answers: {currentCorrect}</p>
+                            </Button>
+                        ))}
+                    </div>
+                );
+            })}
         </div>
     );
-}
+};
 
 export default Trivia;
 
